@@ -4,6 +4,11 @@ const ctx = canvas.getContext("2d");
 
 let debug = false;
 
+// TODO: lisab key kombinatsiooni debug enablemiseks
+
+// TODO: lisab sound effekte + background music vms
+// TODO: lisab seisu (level ja player location) salvestamise + mängu reset nupp
+
 const player = {
   x: 100, // esmane x asukoht
   y: 450, // esmane y asukoht
