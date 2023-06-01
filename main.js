@@ -2,9 +2,11 @@ const canvas = document.getElementById("game");
 canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
+let debug = true;
+
 const player = {
-  x: 50, // esmane x asukoht
-  y: 200, // esmane y asukoht
+  x: 100, // esmane x asukoht
+  y: 450, // esmane y asukoht
   size: 10, // mängija suurus
   speedX: 0, // hetkekiirus x-teljel
   speedY: 0, // hetkekiirus y-teljel
@@ -17,7 +19,7 @@ const player = {
 
 const platforms = [
   { x: 0, y: 590, width: 1200, height: 10, color: "black" },
-  { x: 0, y: 500, width: 400, height: 10 },
+  { x: 50, y: 500, width: 300, height: 10 },
   { x: 220, y: 430, width: 120, height: 10 },
   { x: 280, y: 330, width: 100, height: 10 },
   { x: 120, y: 260, width: 100, height: 10 },
@@ -44,6 +46,23 @@ function handleKeyDown(e) {
   }
 }
 
+const instructionTexts = [
+  "Liiguta mängijat vasakule-paremale nooltega",
+  "Hüppa üles noolega või tühikuga",
+  "Või klassikaline WASD",
+];
+
+function drawTextAt({ textArr, x, y }) {
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "black";
+
+  for (let i = 0; i < textArr.length; i++) {
+    const text = textArr[i];
+
+    ctx.fillText(text, x - offsetX, y + i * 30);
+  }
+}
+
 // eemaldab vabastatud nupud massiivist
 function handleKeyUp(e) {
   pressedKeys = pressedKeys.filter((key) => key !== e.key);
@@ -62,16 +81,20 @@ function isColliding(rect1, rect2) {
   );
 }
 
+function pressed(key) {
+  return pressedKeys.includes(key);
+}
+
+function isJumpPressed() {
+  return pressed("ArrowUp") || pressed("w") || pressed(" ");
+}
+
 function handleKeys() {
   // esialgu lähtestab mängija suuna
   player.speedX = 0;
 
   // hüppamine
-  if (
-    pressedKeys.includes("ArrowUp") &&
-    !player.isJumping &&
-    !player.jumpkeyHeld
-  ) {
+  if (isJumpPressed() && !player.isJumping && !player.jumpkeyHeld) {
     player.speedY = -player.jumpPower;
     player.isJumping = true;
     player.jumpkeyHeld = true;
@@ -79,17 +102,17 @@ function handleKeys() {
 
   // tegeleb sellega, et mängija lõpmatuseni
   // hüppama ei jääks kui nuppu all hoida
-  if (pressedKeys.includes("ArrowUp")) {
+  if (isJumpPressed()) {
     player.jumpkeyHeld = true;
   } else {
     player.jumpkeyHeld = false;
   }
 
   // vasakule paremale liikumine
-  if (pressedKeys.includes("ArrowLeft")) {
+  if (pressed("ArrowLeft") || pressed("a")) {
     player.speedX = -1 * player.speedMultiplier;
   }
-  if (pressedKeys.includes("ArrowRight")) {
+  if (pressed("ArrowRight") || pressed("d")) {
     player.speedX = 1 * player.speedMultiplier;
   }
 }
@@ -175,11 +198,24 @@ function update() {
       adjustedPlatform.width,
       adjustedPlatform.height
     );
+
+    if (debug) {
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "black";
+      ctx.fillText(
+        `[${i}] X:${platform.x} Y:${platform.y} W:${adjustedPlatform.width}`,
+        adjustedPlatform.x,
+        adjustedPlatform.y
+      );
+    }
   }
 
   // joonistab mängija ruuduna
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x - offsetX, player.y, player.size, player.size);
+
+  // joonista õpetuse tekst
+  drawTextAt({ textArr: instructionTexts, x: 10, y: 30 });
 
   // pärib brauserilt uut animatsioonikaadrit pildi värskendamiseks
   requestAnimationFrame(update);
