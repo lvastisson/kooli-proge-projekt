@@ -2,7 +2,7 @@ const canvas = document.getElementById("game");
 canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
-let debug = true;
+let debug = false;
 
 const player = {
   x: 100, // esmane x asukoht
