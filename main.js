@@ -7,9 +7,8 @@ let debug = false;
 // TODO: lisab key kombinatsiooni debug enablemiseks
 
 // TODO: lisab sound effekte + background music vms
-// TODO: lisab seisu (level ja player location) salvestamise + mängu reset nupp
 
-const player = {
+let player = {
   x: 100, // esmane x asukoht
   y: 450, // esmane y asukoht
   size: 10, // mängija suurus
@@ -23,7 +22,7 @@ const player = {
 };
 
 const platforms = [
-  { x: 0, y: 590, width: 1200, height: 10, color: "black" },
+  { x: 0, y: 590, width: 3000, height: 10, color: "black" },
   { x: 50, y: 500, width: 300, height: 10 },
   { x: 220, y: 430, width: 120, height: 10 },
   { x: 280, y: 330, width: 100, height: 10 },
@@ -36,7 +35,7 @@ const platforms = [
   { x: 1000, y: 240, width: 50, height: 10, color: "red" },
 ];
 
-const levelWidth = 1200; // leveli laius
+const levelWidth = 3000; // leveli laius
 const levelHeight = 600; // leveli kõrgus
 
 let offsetX = 0; // horisontaalne offset
@@ -57,6 +56,11 @@ const instructionTexts = [
   "Või klassikaline WASD",
 ];
 
+const instructionTexts2 = [
+  "Mäng salvestab automaatselt sinu viimase state'i",
+  "Mängu lähtestamiseks vajuta 'P' tähte",
+];
+
 function drawTextAt({ textArr, x, y }) {
   ctx.font = "20px Arial";
   ctx.fillStyle = "black";
@@ -66,6 +70,25 @@ function drawTextAt({ textArr, x, y }) {
 
     ctx.fillText(text, x - offsetX, y + i * 30);
   }
+}
+
+// TODO: lisab seisu (level ja player location) salvestamise + mängu reset nupp
+function saveState() {
+  localStorage.setItem("player", JSON.stringify(player));
+}
+
+function saveHandler() {
+  setInterval(saveState, 200);
+}
+
+function loadState() {
+  let prevPlayer = localStorage.getItem("player");
+  if (!prevPlayer) return;
+
+  prevPlayer = JSON.parse(prevPlayer);
+  const propertiesToRecover = ({ x, y } = prevPlayer);
+
+  player = { ...player, ...propertiesToRecover };
 }
 
 // eemaldab vabastatud nupud massiivist
@@ -119,6 +142,12 @@ function handleKeys() {
   }
   if (pressed("ArrowRight") || pressed("d")) {
     player.speedX = 1 * player.speedMultiplier;
+  }
+
+  if (pressed("p")) {
+    clearInterval(saveState);
+    localStorage.removeItem("player");
+    location.reload();
   }
 }
 
@@ -221,9 +250,22 @@ function update() {
 
   // joonista õpetuse tekst
   drawTextAt({ textArr: instructionTexts, x: 10, y: 30 });
+  drawTextAt({ textArr: instructionTexts2, x: 600, y: 30 });
 
   // pärib brauserilt uut animatsioonikaadrit pildi värskendamiseks
   requestAnimationFrame(update);
 }
 
-update(); // alustab mänguga
+function startGame() {
+  // laeb eelmise state'i, kui eksisteerib
+  loadState();
+
+  // perioodiliselt salvestab mängu
+  saveHandler();
+
+  // alustab update tsükli
+  update();
+}
+
+// alustab mänguga
+startGame();
