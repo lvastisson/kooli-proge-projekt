@@ -8,7 +8,7 @@ let debug = false;
 
 // TODO: lisab sound effekte + background music vms
 
-let player = {
+const playerDefaults = {
   x: 100, // esmane x asukoht
   y: 450, // esmane y asukoht
   size: 10, // mängija suurus
@@ -21,27 +21,9 @@ let player = {
   jumpkeyHeld: false, // kas hüppamis nuppu hoitakse all
 };
 
-const platforms = [
-  { x: 0, y: 590, width: 3000, height: 10, color: "black" },
-  { x: 50, y: 500, width: 300, height: 10 },
-  { x: 220, y: 430, width: 120, height: 10 },
-  { x: 280, y: 330, width: 100, height: 10 },
-  { x: 120, y: 260, width: 100, height: 10 },
-  { x: 300, y: 220, width: 80, height: 10 },
-  { x: 90, y: 380, width: 80, height: 10 },
-  { x: 440, y: 550, width: 40, height: 10 },
-  { x: 500, y: 200, width: 70, height: 10, color: "red" },
-  { x: 740, y: 200, width: 90, height: 10, color: "red" },
-  { x: 1000, y: 240, width: 50, height: 10, color: "red" },
-  { x: 1200, y: 320, width: 110, height: 10 },
-  { x: 1400, y: 300, width: 100, height: 10 },
-  { x: 1600, y: 350, width: 120, height: 10 },
-  { x: 1820, y: 320, width: 80, height: 10 },
-  { x: 2000, y: 280, width: 100, height: 10 },
-  { x: 2200, y: 230, width: 70, height: 10 },
-  { x: 2400, y: 250, width: 70, height: 10 },
-  { x: 2600, y: 350, width: 300, height: 10 },
-];
+let currLevel = 0;
+
+let player = JSON.parse(JSON.stringify(playerDefaults));
 
 const specialMeta = {
   door: {
@@ -50,12 +32,62 @@ const specialMeta = {
   },
 };
 
-const special = [{ x: 2740, y: 320, t: "door" }];
+const levels = [
+  {
+    levelWidth: 3000,
+    offsetX: 0,
+    player: {
+      x: 100,
+      y: 450,
+    },
+    platforms: [
+      { x: 0, y: 590, width: 3000, height: 10, color: "black" },
+      { x: 50, y: 500, width: 300, height: 10 },
+      { x: 220, y: 430, width: 120, height: 10 },
+      { x: 280, y: 330, width: 100, height: 10 },
+      { x: 120, y: 260, width: 100, height: 10 },
+      { x: 300, y: 220, width: 80, height: 10 },
+      { x: 90, y: 380, width: 80, height: 10 },
+      { x: 440, y: 550, width: 40, height: 10 },
+      { x: 500, y: 200, width: 70, height: 10, color: "red" },
+      { x: 740, y: 200, width: 90, height: 10, color: "red" },
+      { x: 1000, y: 240, width: 50, height: 10, color: "red" },
+      { x: 1200, y: 320, width: 110, height: 10 },
+      { x: 1400, y: 300, width: 100, height: 10 },
+      { x: 1600, y: 350, width: 120, height: 10 },
+      { x: 1820, y: 320, width: 80, height: 10 },
+      { x: 2000, y: 280, width: 100, height: 10 },
+      { x: 2200, y: 230, width: 70, height: 10 },
+      { x: 2400, y: 250, width: 70, height: 10 },
+      { x: 2600, y: 350, width: 300, height: 10, color: "#172461" },
+    ],
+    special: [{ x: 2740, y: 320, t: "door" }],
+  },
+  {
+    levelWidth: 3000,
+    offsetX: 0,
+    player: {
+      x: 200,
+      y: 100,
+    },
+    platforms: [
+      { x: 0, y: 590, width: 3000, height: 10, color: "black" },
+      { x: 50, y: 520, width: 300, height: 10, color: "green" },
+    ],
+    special: [{ x: 2740, y: 320, t: "door" }],
+  },
+];
 
-const levelWidth = 3000; // leveli laius
+let currLevelInfo = (() => levels[currLevel])();
+
+// iga kord võetakse muutujasse uus väärtus anonüümse funktsiooni kaudu, mida kohe jooksutatakse
+let platforms = (() => levels[currLevel].platforms)();
+let special = (() => levels[currLevel].special)();
+
+let levelWidth = (() => levels[currLevel].levelWidth || 3000)(); // leveli laius
 const levelHeight = 600; // leveli kõrgus
 
-let offsetX = 0; // horisontaalne offset
+let offsetX = levels[currLevel].offsetX || 0; // horisontaalne offset
 
 const instructionTexts = [
   "Liiguta mängijat vasakule-paremale nooltega",
@@ -84,7 +116,8 @@ function saveState() {
   const state = {
     debug,
     offsetX,
-    player: player,
+    currLevel,
+    player,
   };
   localStorage.setItem("state", JSON.stringify(state));
 }
@@ -106,6 +139,7 @@ function loadState() {
 
   debug = prevState.debug || false;
   offsetX = prevState.offsetX || 0;
+  currLevel = prevState.currLevel || 0;
 }
 
 // massiiv vajutatud klahvide jälgimiseks
@@ -207,6 +241,20 @@ function handleKeys() {
   }
 }
 
+function refreshLevelData() {
+  platforms = (() => levels[currLevel].platforms)();
+  special = (() => levels[currLevel].special)();
+  levelWidth = (() => levels[currLevel].levelWidth || 3000)();
+}
+
+function handleNextLevel() {
+  currLevel++;
+  offsetX = currLevelInfo.offsetX;
+  player = { ...player, ...currLevelInfo.player };
+
+  refreshLevelData();
+}
+
 function update() {
   // tegeleb vajutatud nuppudega
   handleKeys();
@@ -284,6 +332,7 @@ function update() {
         });
 
         if (!held("e") && pressed("e")) {
+          handleNextLevel();
         }
       }
     };
@@ -359,6 +408,8 @@ function update() {
 function startGame() {
   // laeb eelmise state'i, kui eksisteerib
   loadState();
+
+  refreshLevelData();
 
   // perioodiliselt salvestab mängu
   saveHandler();
