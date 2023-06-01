@@ -11,6 +11,7 @@ const player = {
   speedMultiplier: 2, // kiiruse kordaja
   acceleration: 0.1, // vertikaalne
   isJumping: false, // kas mängijal on hetkel hüpe pooleli
+  jumpkeyHeld: false, // kas hüppamis nuppu hoitakse all
 };
 
 const platforms = [
@@ -57,18 +58,32 @@ function isColliding(rect1, rect2) {
 }
 
 function handleKeys() {
-  // esialgu lähtestab mängija suunad
+  // esialgu lähtestab mängija suuna
   player.speedX = 0;
 
-  if (pressedKeys.includes("ArrowUp") && !player.isJumping) {
+  // hüppamine
+  if (
+    pressedKeys.includes("ArrowUp") &&
+    !player.isJumping &&
+    !player.jumpkeyHeld
+  ) {
     player.speedY = -player.jumpPower;
     player.isJumping = true;
+    player.jumpkeyHeld = true;
   }
 
+  // tegeleb sellega, et mängija lõpmatuseni
+  // hüppama ei jääks kui nuppu all hoida
+  if (pressedKeys.includes("ArrowUp")) {
+    player.jumpkeyHeld = true;
+  } else {
+    player.jumpkeyHeld = false;
+  }
+
+  // vasakule paremale liikumine
   if (pressedKeys.includes("ArrowLeft")) {
     player.speedX = -1 * player.speedMultiplier;
   }
-
   if (pressedKeys.includes("ArrowRight")) {
     player.speedX = 1 * player.speedMultiplier;
   }
@@ -155,7 +170,7 @@ function update() {
   }
 
   // joonistab mängija ruuduna
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "blue";
   ctx.fillRect(player.x - offsetX, player.y, player.size, player.size);
 
   // pärib brauserilt uut animatsioonikaadrit pildi värskendamiseks
