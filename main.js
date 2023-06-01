@@ -3,6 +3,7 @@ canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
 let debug = false;
+let godmode = false;
 
 // TODO: lisab key kombinatsiooni debug enablemiseks
 
@@ -89,20 +90,9 @@ const levelHeight = 600; // leveli kõrgus
 
 let offsetX = levels[currLevel].offsetX || 0; // horisontaalne offset
 
-const instructionTexts = [
-  "Liiguta mängijat vasakule-paremale nooltega",
-  "Hüppa üles noolega või tühikuga",
-  "Või klassikaline WASD",
-];
-
-const instructionTexts2 = [
-  "Mäng salvestab automaatselt sinu viimase state'i",
-  "Mängu lähtestamiseks vajuta 'P' tähte",
-];
-
-function drawTextAt({ textArr, x, y }) {
-  ctx.font = "20px Arial";
-  ctx.fillStyle = "black";
+function drawTextAt({ textArr, x, y, font, fill }) {
+  ctx.font = font || "20px Arial";
+  ctx.fillStyle = fill || "black";
 
   for (let i = 0; i < textArr.length; i++) {
     const text = textArr[i];
@@ -118,6 +108,7 @@ function saveState() {
     offsetX,
     currLevel,
     player,
+    godmode,
   };
   localStorage.setItem("state", JSON.stringify(state));
 }
@@ -138,6 +129,7 @@ function loadState() {
   }
 
   debug = prevState.debug || false;
+  godmode = prevState.godmode || false;
   offsetX = prevState.offsetX || 0;
   currLevel = prevState.currLevel || 0;
 }
@@ -147,11 +139,14 @@ let pressedKeys = [];
 // massiiv, kuhu salvestatakse klahvid, mille funktsioon on ühe korra juba käivitatud
 let heldKeys = [];
 
+let lastPressedKey = "";
+
 // talletab alla vajutatud nupud massiivi
 function handleKeyDown(e) {
   if (!pressedKeys.includes(e.key)) {
     pressedKeys.push(e.key);
   }
+  lastPressedKey = e.key;
 }
 
 // eemaldab vabastatud nupud massiivist
@@ -208,25 +203,49 @@ function held(key) {
   return false;
 }
 
+let lastPressedKeysSequence = [];
+let copyOfLastPressedKey = "";
+
+function handleKeyCombinations() {
+  if (lastPressedKey !== copyOfLastPressedKey) {
+    lastPressedKeysSequence.push(lastPressedKey);
+
+    if (lastPressedKeysSequence.length > 20) {
+      lastPressedKeysSequence.splice(0, lastPressedKeysSequence.length - 20);
+    }
+
+    const keySequenceStr = lastPressedKeysSequence.join("");
+
+    if (keySequenceStr.endsWith(atob("YW1vZ3Vz"))) {
+      godmode = !godmode;
+    }
+
+    copyOfLastPressedKey = lastPressedKey;
+  }
+}
+
 function handleKeys() {
+  handleKeyCombinations();
+
   // esialgu lähtestab mängija suuna
   player.speedX = 0;
 
   // hüppamine
   if (
-    !held(["ArrowUp", "w", " "]) &&
-    pressed(["ArrowUp", "w", " "]) &&
-    !player.isJumping
+    (!held(["ArrowUp", "w", " "]) &&
+      pressed(["ArrowUp", "w", " "]) &&
+      !player.isJumping) ||
+    (godmode && pressed(["ArrowUp", "w", " "]))
   ) {
     player.speedY = -player.jumpPower;
     player.isJumping = true;
   }
 
   // vasakule paremale liikumine
-  if (pressed("ArrowLeft") || pressed("a")) {
+  if (pressed(["ArrowLeft", "a"])) {
     player.speedX = -1 * player.speedMultiplier;
   }
-  if (pressed("ArrowRight") || pressed("d")) {
+  if (pressed(["ArrowRight", "d"])) {
     player.speedX = 1 * player.speedMultiplier;
   }
 
@@ -397,9 +416,27 @@ function update() {
   ctx.fillStyle = "blue";
   ctx.fillRect(player.x - offsetX, player.y, player.size, player.size);
 
+  const instructionTexts = [
+    "Liiguta mängijat vasakule-paremale nooltega",
+    "Hüppa üles noolega või tühikuga",
+    "Või klassikaline WASD",
+  ];
+
+  const instructionTexts2 = [
+    "Mäng salvestab automaatselt sinu viimase state'i",
+    "Mängu lähtestamiseks vajuta 'P' tähte",
+  ];
+
   // joonista õpetuse tekst
-  drawTextAt({ textArr: instructionTexts, x: 10, y: 30 });
-  drawTextAt({ textArr: instructionTexts2, x: 600, y: 30 });
+  drawTextAt({ x: 10, y: 30, textArr: instructionTexts });
+  drawTextAt({ x: 600, y: 30, textArr: instructionTexts2 });
+  drawTextAt({
+    x: 10,
+    y: 650,
+    textArr: [`Level ${currLevel + 1}`],
+    font: "48px arial",
+    fill: `rgb(${currLevel * 32}, ${currLevel * 20}, ${currLevel * 48})`,
+  });
 
   // pärib brauserilt uut animatsioonikaadrit pildi värskendamiseks
   requestAnimationFrame(update);
