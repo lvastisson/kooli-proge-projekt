@@ -1,4 +1,5 @@
 const canvas = document.getElementById("game");
+canvas.width = window.innerWidth - 20;
 const ctx = canvas.getContext("2d");
 
 const player = {
@@ -17,10 +18,17 @@ const player = {
 const platforms = [
   { x: 0, y: 500, width: 400, height: 10 },
   { x: 220, y: 430, width: 120, height: 10 },
+  { x: 280, y: 330, width: 100, height: 10 },
+  { x: 120, y: 260, width: 100, height: 10 },
+  { x: 300, y: 220, width: 80, height: 10 },
   { x: 90, y: 380, width: 80, height: 10 },
+  { x: 440, y: 550, width: 40, height: 10 },
+  { x: 500, y: 200, width: 70, height: 10, color: "red" },
+  { x: 740, y: 200, width: 90, height: 10, color: "red" },
+  { x: 1000, y: 240, width: 50, height: 10, color: "red" },
 ];
 
-const levelWidth = 800; // leveli laius
+const levelWidth = 1200; // leveli laius
 const levelHeight = canvas.height; // leveli kõrgus
 
 let offsetX = 0; // horisontaalne offset
@@ -97,11 +105,11 @@ function update() {
   player.y += player.speedY * player.speedMultiplier;
 
   // limiteerib mängija leveli nähtavale osale, et ei läheks out of bounds
-  if (player.x < offsetX) {
-    player.x = offsetX;
+  if (player.x < 0) {
+    player.x = 0;
   }
-  if (player.x + player.size > offsetX + canvas.width) {
-    player.x = offsetX + canvas.width - player.size;
+  if (player.x + player.size > levelWidth) {
+    player.x = levelWidth - player.size;
   }
 
   // leveli horsiontaalselt nihutamine kui mängija hakkab ekraani äärele lähedale jõudma
@@ -112,8 +120,8 @@ function update() {
   }
 
   // väldib mängija läbi leveli kukkumist
-  if (player.y + player.size > canvas.height) {
-    player.y = canvas.height - player.size;
+  if (player.y + player.size > levelHeight) {
+    player.y = levelHeight - player.size;
     player.speedY = 0;
     player.isJumping = false;
   }
@@ -147,9 +155,9 @@ function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // joonistab platvormid vastavalt eelnevalt määratud array'le
-  ctx.fillStyle = "gray";
   for (let i = 0; i < platforms.length; i++) {
     const platform = platforms[i];
+    ctx.fillStyle = platform.color || "gray";
     const adjustedPlatform = {
       x: platform.x - offsetX,
       y: platform.y,
