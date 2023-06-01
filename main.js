@@ -32,16 +32,12 @@ let pressedKeys = [];
 function handleKeyDown(e) {
   if (!pressedKeys.includes(e.key)) {
     pressedKeys.push(e.key);
-    console.log("add", e.key);
-    console.log(pressedKeys);
   }
 }
 
 // Funktsioon klahvi vabastamiseks
 function handleKeyUp(e) {
   pressedKeys = pressedKeys.filter((key) => key !== e.key);
-  console.log("remove", e.key);
-  console.log(pressedKeys);
 }
 
 document.addEventListener("keydown", handleKeyDown);
@@ -126,7 +122,7 @@ function update() {
   for (let i = 0; i < platforms.length; i++) {
     const platform = platforms[i];
     const adjustedPlatform = {
-      x: platform.x - offsetX,
+      x: platform.x,
       y: platform.y,
       width: platform.width,
       height: platform.height,
