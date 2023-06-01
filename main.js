@@ -140,7 +140,7 @@ function update() {
   if (player.x > offsetX + (canvas.width / 2 + canvas.width / 4)) {
     offsetX = Math.min(
       player.x - (canvas.width / 2 + canvas.width / 4),
-      levelWidth - canvas.width
+      Math.max(levelWidth - canvas.width, 0)
     );
   } else if (player.x < offsetX + canvas.width / 4) {
     offsetX = Math.max(player.x - canvas.width / 4, 0);
