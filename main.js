@@ -1,5 +1,5 @@
 const canvas = document.getElementById("game");
-canvas.width = window.innerWidth - 20;
+canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
 const player = {
@@ -16,6 +16,7 @@ const player = {
 };
 
 const platforms = [
+  { x: 0, y: 590, width: 1200, height: 10, color: "black" },
   { x: 0, y: 500, width: 400, height: 10 },
   { x: 220, y: 430, width: 120, height: 10 },
   { x: 280, y: 330, width: 100, height: 10 },
@@ -29,21 +30,21 @@ const platforms = [
 ];
 
 const levelWidth = 1200; // leveli laius
-const levelHeight = canvas.height; // leveli kõrgus
+const levelHeight = 600; // leveli kõrgus
 
 let offsetX = 0; // horisontaalne offset
 
-// Massiiv vajutatud klahvide jälgimiseks
+// massiiv vajutatud klahvide jälgimiseks
 let pressedKeys = [];
 
-// Funktsioon klahvi vajutamiseks
+// talletab alla vajutatud nupud massiivi
 function handleKeyDown(e) {
   if (!pressedKeys.includes(e.key)) {
     pressedKeys.push(e.key);
   }
 }
 
-// Funktsioon klahvi vabastamiseks
+// eemaldab vabastatud nupud massiivist
 function handleKeyUp(e) {
   pressedKeys = pressedKeys.filter((key) => key !== e.key);
 }
@@ -113,8 +114,11 @@ function update() {
   }
 
   // leveli horsiontaalselt nihutamine kui mängija hakkab ekraani äärele lähedale jõudma
-  if (player.x > offsetX + canvas.width / 2) {
-    offsetX = player.x - canvas.width / 2;
+  if (player.x > offsetX + (canvas.width / 2 + canvas.width / 4)) {
+    offsetX = Math.min(
+      player.x - (canvas.width / 2 + canvas.width / 4),
+      levelWidth - canvas.width
+    );
   } else if (player.x < offsetX + canvas.width / 4) {
     offsetX = Math.max(player.x - canvas.width / 4, 0);
   }
