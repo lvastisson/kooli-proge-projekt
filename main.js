@@ -43,6 +43,13 @@ const platforms = [
   { x: 2600, y: 350, width: 300, height: 10 },
 ];
 
+const specialMeta = {
+  door: {
+    width: 20,
+    height: 30,
+  },
+};
+
 const special = [{ x: 2740, y: 320, t: "door" }];
 
 const levelWidth = 3000; // leveli laius
@@ -264,6 +271,33 @@ function update() {
   // puhastab ekraani enne uue seisu joonistamist
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // tegeleb spetsiaalsete elementide funktsionaalsusega
+  for (let i = 0; i < special.length; i++) {
+    const el = special[i];
+
+    const handleDoor = () => {
+      if (isColliding(player, { ...el, ...specialMeta.door })) {
+        drawTextAt({
+          x: el.x - 100,
+          y: el.y - 50,
+          textArr: ["Vajuta 'E'", "et minna järgmisele levelile"],
+        });
+
+        if (!held("e") && pressed("e")) {
+        }
+      }
+    };
+
+    switch (el.t) {
+      case "door":
+        handleDoor();
+        break;
+
+      default:
+        break;
+    }
+  }
+
   // joonistab platvormid vastavalt eelnevalt määratud array'le
   for (let i = 0; i < platforms.length; i++) {
     const plat = platforms[i];
@@ -293,11 +327,21 @@ function update() {
   for (let i = 0; i < special.length; i++) {
     const el = special[i];
 
-    ctx.fillStyle = "green";
-    ctx.fillRect(el.x - offsetX, el.y, 20, 30);
+    const renderDoor = () => {
+      ctx.fillStyle = "green";
+      ctx.fillRect(el.x - offsetX, el.y, 20, 30);
+      ctx.fillStyle = "black";
+      ctx.fillRect(el.x - offsetX + 12, el.y + 14, 5, 2);
+    };
 
-    ctx.fillStyle = "black";
-    ctx.fillRect(el.x - offsetX + 12, el.y + 14, 5, 2);
+    switch (el.t) {
+      case "door":
+        renderDoor();
+        break;
+
+      default:
+        break;
+    }
   }
 
   // joonistab mängija ruuduna
