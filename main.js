@@ -69,7 +69,7 @@ const levels = [
     offsetX: 0,
     player: {
       x: 200,
-      y: 100,
+      y: 500,
     },
     platforms: [
       { x: 0, y: 590, width: 3000, height: 10, color: "black" },
@@ -90,14 +90,14 @@ const levelHeight = 600; // leveli kõrgus
 
 let offsetX = levels[currLevel].offsetX || 0; // horisontaalne offset
 
-function drawTextAt({ textArr, x, y, font, fill }) {
+function drawTextAt({ textArr, x, y, font, fill, fixed }) {
   ctx.font = font || "20px Arial";
   ctx.fillStyle = fill || "black";
 
   for (let i = 0; i < textArr.length; i++) {
     const text = textArr[i];
 
-    ctx.fillText(text, x - offsetX, y + i * 30);
+    ctx.fillText(text, x - (fixed ? 0 : offsetX), y + i * 30);
   }
 }
 
@@ -445,6 +445,28 @@ function update() {
     font: "48px arial",
     fill: `rgb(${currLevel * 32}, ${currLevel * 20}, ${currLevel * 48})`,
   });
+
+  // debug puhul kuva lisainfot
+  if (debug) {
+    drawTextAt({
+      x: 200,
+      y: 650,
+      textArr: [`X:${parseInt(player.x)} Y:${parseInt(player.y)}`],
+      font: "20px arial",
+      fixed: true,
+    });
+
+    if (godmode) {
+      drawTextAt({
+        x: 200,
+        y: 625,
+        textArr: ["DEV"],
+        font: "20px arial",
+        fill: "#3f50d1",
+        fixed: true,
+      });
+    }
+  }
 
   // pärib brauserilt uut animatsioonikaadrit pildi värskendamiseks
   requestAnimationFrame(update);
