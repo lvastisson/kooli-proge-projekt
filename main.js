@@ -3,10 +3,11 @@ canvas.width = window.innerWidth;
 const ctx = canvas.getContext("2d");
 
 let debug = false;
+let fly = false;
 let godmode = false;
+let speed = false;
 
-// TODO: lisab key kombinatsiooni debug enablemiseks
-
+// TODO: lisab basic level editori kus godmodes paneb elemente maha ja hiljem kopeerib tulemusena saadud json'i
 // TODO: lisab sound effekte + background music vms
 
 const playerDefaults = {
@@ -75,17 +76,18 @@ const levels = [
       { x: 0, y: 590, width: 3000, height: 10, color: "black" },
       { x: 50, y: 520, width: 300, height: 10, color: "green" },
     ],
-    special: [{ x: 2740, y: 320, t: "door" }],
+    special: [{ x: 2740, y: 300, t: "door" }],
   },
 ];
 
-let currLevelInfo = (() => levels[currLevel])();
+let currLevelInfo = levels[currLevel];
 
-// iga kord võetakse muutujasse uus väärtus anonüümse funktsiooni kaudu, mida kohe jooksutatakse
-let platforms = (() => levels[currLevel].platforms)();
-let special = (() => levels[currLevel].special)();
+player = { ...player, ...currLevelInfo.player };
 
-let levelWidth = (() => levels[currLevel].levelWidth || 3000)(); // leveli laius
+let platforms = levels[currLevel].platforms;
+let special = levels[currLevel].special;
+
+let levelWidth = levels[currLevel].levelWidth || 3000; // leveli laius
 const levelHeight = 600; // leveli kõrgus
 
 let offsetX = levels[currLevel].offsetX || 0; // horisontaalne offset
@@ -109,6 +111,7 @@ function saveState() {
     currLevel,
     player,
     godmode,
+    fly,
   };
   localStorage.setItem("state", JSON.stringify(state));
 }
@@ -120,18 +123,22 @@ function saveHandler() {
 function loadState() {
   let prevState = localStorage.getItem("state");
   if (!prevState) return;
-
   prevState = JSON.parse(prevState);
 
+  currLevel = prevState.currLevel || 0;
+
   if (prevState.player) {
+    player = { ...player, ...levels[currLevel].player };
     const propertiesToRecover = ({ x, y } = prevState.player);
     player = { ...player, ...propertiesToRecover };
+  } else {
+    player = { ...player, ...levels[currLevel].player };
   }
 
   debug = prevState.debug || false;
   godmode = prevState.godmode || false;
+  fly = prevState.fly || false;
   offsetX = prevState.offsetX || 0;
-  currLevel = prevState.currLevel || 0;
 }
 
 // massiiv vajutatud klahvide jälgimiseks
@@ -220,16 +227,38 @@ function handleKeyCombinations() {
     if (keySequenceStr.endsWith(atob("ZGVidWc="))) {
       debug = !debug;
     }
+    if (keySequenceStr.endsWith(atob("Z3Jhdml0eQ=="))) {
+      fly = !fly;
+    }
 
     copyOfLastPressedKey = lastPressedKey;
   }
 }
+
+let prevSpeedMultiplier = playerDefaults.speedMultiplier;
 
 function handleKeys() {
   handleKeyCombinations();
 
   // esialgu lähtestab mängija suuna
   player.speedX = 0;
+  if (godmode && fly) player.speedY = 0;
+
+  if (godmode && !held("Shift") && pressed("Shift")) {
+    heldKeys.push("Shift");
+    if (!speed) {
+      prevSpeedMultiplier = player.speedMultiplier;
+      player.speedMultiplier *= 2;
+      speed = true;
+    } else {
+      player.speedMultiplier = prevSpeedMultiplier;
+      speed = false;
+    }
+  }
+  if (!speed || !godmode) {
+    player.speedMultiplier = prevSpeedMultiplier;
+    speed = false;
+  }
 
   // hüppamine
   if (
@@ -238,8 +267,16 @@ function handleKeys() {
       !player.isJumping) ||
     (godmode && pressed(["ArrowUp", "w", " "]))
   ) {
-    player.speedY = -player.jumpPower;
+    if (fly && godmode) {
+      player.speedY = -player.speedMultiplier;
+    } else {
+      player.speedY = -player.jumpPower;
+    }
     player.isJumping = true;
+  }
+
+  if (pressed(["ArrowDown", "s"]) && godmode && fly) {
+    player.speedY = player.speedMultiplier;
   }
 
   // vasakule paremale liikumine
@@ -255,6 +292,14 @@ function handleKeys() {
     localStorage.removeItem("state");
     location.reload();
   }
+
+  if (pressed("x")) {
+    clearInterval(saveState);
+    let state = JSON.parse(localStorage.getItem("state"));
+    state.player = null;
+    localStorage.setItem("state", JSON.stringify(state));
+    location.reload();
+  }
 }
 
 function refreshLevelData() {
@@ -266,7 +311,7 @@ function refreshLevelData() {
 function handleNextLevel() {
   currLevel++;
   offsetX = currLevelInfo.offsetX;
-  player = { ...player, ...currLevelInfo.player };
+  player = { ...player, ...levels[currLevel].player };
 
   refreshLevelData();
 }
@@ -276,7 +321,9 @@ function update() {
   handleKeys();
 
   // rakendab mängija Y asukohale gravitatsiooni
-  player.speedY += player.acceleration;
+  if (!(godmode && fly)) {
+    player.speedY += player.acceleration;
+  }
 
   // uuendab mängija asukohta vastavalt sisendsuunale
   player.x += player.speedX * player.speedMultiplier;
@@ -432,7 +479,8 @@ function update() {
 
   const instructionTexts2 = [
     "Mäng salvestab automaatselt sinu viimase state'i",
-    "Mängu lähtestamiseks vajuta 'P' tähte",
+    "Terve mängu lähtestamiseks vajuta 'P' tähte",
+    "Leveli lähtestamiseks vajuta 'X' tähte",
   ];
 
   // joonista õpetuse tekst
@@ -465,6 +513,28 @@ function update() {
         fill: "#3f50d1",
         fixed: true,
       });
+
+      if (fly) {
+        drawTextAt({
+          x: 250,
+          y: 625,
+          textArr: ["GRAVITY"],
+          font: "20px arial",
+          fill: "#d60f2a",
+          fixed: true,
+        });
+      }
+
+      if (speed) {
+        drawTextAt({
+          x: 344,
+          y: 625,
+          textArr: ["SPEED"],
+          font: "20px arial",
+          fill: "#05a136",
+          fixed: true,
+        });
+      }
     }
   }
 
