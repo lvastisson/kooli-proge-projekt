@@ -24,29 +24,27 @@ const levelHeight = canvas.height; // leveli kõrgus
 
 let offsetX = 0; // horisontaalne offset
 
+// Massiiv vajutatud klahvide jälgimiseks
+let pressedKeys = [];
+
+// Funktsioon klahvi vajutamiseks
+function handleKeyDown(e) {
+  if (!pressedKeys.includes(e.key)) {
+    pressedKeys.push(e.key);
+    console.log("add", e.key);
+    console.log(pressedKeys);
+  }
+}
+
+// Funktsioon klahvi vabastamiseks
+function handleKeyUp(e) {
+  pressedKeys = pressedKeys.filter((key) => key !== e.key);
+  console.log("remove", e.key);
+  console.log(pressedKeys);
+}
+
 document.addEventListener("keydown", handleKeyDown);
 document.addEventListener("keyup", handleKeyUp);
-
-function handleKeyDown(e) {
-  if (e.key === "ArrowUp" && !player.isJumping) {
-    player.speedY = -player.jumpPower;
-    player.isJumping = true;
-  } else if (e.key === "ArrowDown") {
-    player.speedY = 1;
-  } else if (e.key === "ArrowLeft") {
-    player.speedX = -1;
-  } else if (e.key === "ArrowRight") {
-    player.speedX = 1;
-  }
-}
-
-function handleKeyUp(e) {
-  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-    player.speedY = 0;
-  } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-    player.speedX = 0;
-  }
-}
 
 // kontrollib kahe ristküliku kattuvust/collision
 function isColliding(rect1, rect2) {
@@ -58,7 +56,28 @@ function isColliding(rect1, rect2) {
   );
 }
 
+function handleKeys() {
+  // esialgu lähtestab mängija suunad
+  player.speedX = 0;
+
+  if (pressedKeys.includes("ArrowUp") && !player.isJumping) {
+    player.speedY = -player.jumpPower;
+    player.isJumping = true;
+  }
+
+  if (pressedKeys.includes("ArrowLeft")) {
+    player.speedX = -1 * player.speedMultiplier;
+  }
+
+  if (pressedKeys.includes("ArrowRight")) {
+    player.speedX = 1 * player.speedMultiplier;
+  }
+}
+
 function update() {
+  // tegeleb vajutatud nuppudega
+  handleKeys();
+
   // rakendab mängija Y asukohale gravitatsiooni
   player.speedY += player.acceleration;
 
