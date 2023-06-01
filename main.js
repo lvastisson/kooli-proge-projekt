@@ -209,15 +209,16 @@ let copyOfLastPressedKey = "";
 function handleKeyCombinations() {
   if (lastPressedKey !== copyOfLastPressedKey) {
     lastPressedKeysSequence.push(lastPressedKey);
-
     if (lastPressedKeysSequence.length > 20) {
       lastPressedKeysSequence.splice(0, lastPressedKeysSequence.length - 20);
     }
 
     const keySequenceStr = lastPressedKeysSequence.join("");
-
     if (keySequenceStr.endsWith(atob("YW1vZ3Vz"))) {
       godmode = !godmode;
+    }
+    if (keySequenceStr.endsWith(atob("ZGVidWc="))) {
+      debug = !debug;
     }
 
     copyOfLastPressedKey = lastPressedKey;
@@ -253,10 +254,6 @@ function handleKeys() {
     clearInterval(saveState);
     localStorage.removeItem("state");
     location.reload();
-  }
-
-  if (!held("m") && pressed("m")) {
-    debug = !debug;
   }
 }
 
