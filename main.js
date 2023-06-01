@@ -33,22 +33,22 @@ const platforms = [
   { x: 500, y: 200, width: 70, height: 10, color: "red" },
   { x: 740, y: 200, width: 90, height: 10, color: "red" },
   { x: 1000, y: 240, width: 50, height: 10, color: "red" },
+  { x: 1200, y: 320, width: 110, height: 10 },
+  { x: 1400, y: 300, width: 100, height: 10 },
+  { x: 1600, y: 350, width: 120, height: 10 },
+  { x: 1820, y: 320, width: 80, height: 10 },
+  { x: 2000, y: 280, width: 100, height: 10 },
+  { x: 2200, y: 230, width: 70, height: 10 },
+  { x: 2400, y: 250, width: 70, height: 10 },
+  { x: 2600, y: 350, width: 300, height: 10 },
 ];
+
+const special = [{ x: 2600, y: 340, t: "door" }];
 
 const levelWidth = 3000; // leveli laius
 const levelHeight = 600; // leveli kõrgus
 
 let offsetX = 0; // horisontaalne offset
-
-// massiiv vajutatud klahvide jälgimiseks
-let pressedKeys = [];
-
-// talletab alla vajutatud nupud massiivi
-function handleKeyDown(e) {
-  if (!pressedKeys.includes(e.key)) {
-    pressedKeys.push(e.key);
-  }
-}
 
 const instructionTexts = [
   "Liiguta mängijat vasakule-paremale nooltega",
@@ -74,7 +74,12 @@ function drawTextAt({ textArr, x, y }) {
 
 // TODO: lisab seisu (level ja player location) salvestamise + mängu reset nupp
 function saveState() {
-  localStorage.setItem("player", JSON.stringify(player));
+  const state = {
+    debug,
+    offsetX,
+    player: player,
+  };
+  localStorage.setItem("state", JSON.stringify(state));
 }
 
 function saveHandler() {
@@ -82,18 +87,36 @@ function saveHandler() {
 }
 
 function loadState() {
-  let prevPlayer = localStorage.getItem("player");
-  if (!prevPlayer) return;
+  let prevState = localStorage.getItem("state");
+  if (!prevState) return;
 
-  prevPlayer = JSON.parse(prevPlayer);
-  const propertiesToRecover = ({ x, y } = prevPlayer);
+  prevState = JSON.parse(prevState);
 
-  player = { ...player, ...propertiesToRecover };
+  if (prevState.player) {
+    const propertiesToRecover = ({ x, y } = prevState.player);
+    player = { ...player, ...propertiesToRecover };
+  }
+
+  debug = prevState.debug || false;
+  offsetX = prevState.offsetX || 0;
+}
+
+// massiiv vajutatud klahvide jälgimiseks
+let pressedKeys = [];
+// massiiv, kuhu salvestatakse klahvid, mille funktsioon on ühe korra juba käivitatud
+let heldKeys = [];
+
+// talletab alla vajutatud nupud massiivi
+function handleKeyDown(e) {
+  if (!pressedKeys.includes(e.key)) {
+    pressedKeys.push(e.key);
+  }
 }
 
 // eemaldab vabastatud nupud massiivist
 function handleKeyUp(e) {
   pressedKeys = pressedKeys.filter((key) => key !== e.key);
+  heldKeys = heldKeys.filter((key) => key !== e.key);
 }
 
 document.addEventListener("keydown", handleKeyDown);
@@ -110,11 +133,38 @@ function isColliding(rect1, rect2) {
 }
 
 function pressed(key) {
-  return pressedKeys.includes(key);
+  if (typeof key === "string") {
+    if (pressedKeys.includes(key)) {
+      if (!heldKeys.includes(key)) {
+        heldKeys.push(key);
+      }
+      return true;
+    }
+  } else if (typeof key === "object") {
+    for (let i = 0; i < key.length; i++) {
+      const el = key[i];
+
+      if (pressedKeys.includes(el)) {
+        if (!heldKeys.includes(el)) {
+          heldKeys.push(el);
+        }
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
-function isJumpPressed() {
-  return pressed("ArrowUp") || pressed("w") || pressed(" ");
+function held(key) {
+  if (typeof key === "string") {
+    return heldKeys.includes(key);
+  } else if (typeof key === "object") {
+    for (let i = 0; i < key.length; i++) {
+      const el = key[i];
+      if (heldKeys.includes(el)) return true;
+    }
+  }
+  return false;
 }
 
 function handleKeys() {
@@ -122,18 +172,13 @@ function handleKeys() {
   player.speedX = 0;
 
   // hüppamine
-  if (isJumpPressed() && !player.isJumping && !player.jumpkeyHeld) {
+  if (
+    !held(["ArrowUp", "w", " "]) &&
+    pressed(["ArrowUp", "w", " "]) &&
+    !player.isJumping
+  ) {
     player.speedY = -player.jumpPower;
     player.isJumping = true;
-    player.jumpkeyHeld = true;
-  }
-
-  // tegeleb sellega, et mängija lõpmatuseni
-  // hüppama ei jääks kui nuppu all hoida
-  if (isJumpPressed()) {
-    player.jumpkeyHeld = true;
-  } else {
-    player.jumpkeyHeld = false;
   }
 
   // vasakule paremale liikumine
@@ -146,8 +191,12 @@ function handleKeys() {
 
   if (pressed("p")) {
     clearInterval(saveState);
-    localStorage.removeItem("player");
+    localStorage.removeItem("state");
     location.reload();
+  }
+
+  if (!held("m") && pressed("m")) {
+    debug = !debug;
   }
 }
 
