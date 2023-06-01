@@ -43,7 +43,7 @@ const platforms = [
   { x: 2600, y: 350, width: 300, height: 10 },
 ];
 
-const special = [{ x: 2600, y: 340, t: "door" }];
+const special = [{ x: 2740, y: 320, t: "door" }];
 
 const levelWidth = 3000; // leveli laius
 const levelHeight = 600; // leveli kõrgus
@@ -266,31 +266,38 @@ function update() {
 
   // joonistab platvormid vastavalt eelnevalt määratud array'le
   for (let i = 0; i < platforms.length; i++) {
-    const platform = platforms[i];
-    ctx.fillStyle = platform.color || "gray";
-    const adjustedPlatform = {
-      x: platform.x - offsetX,
-      y: platform.y,
-      width: platform.width,
-      height: platform.height,
+    const plat = platforms[i];
+    ctx.fillStyle = plat.color || "gray";
+    const adjPlat = {
+      x: plat.x - offsetX,
+      y: plat.y,
+      width: plat.width,
+      height: plat.height,
     };
 
-    ctx.fillRect(
-      adjustedPlatform.x,
-      adjustedPlatform.y,
-      adjustedPlatform.width,
-      adjustedPlatform.height
-    );
+    ctx.fillRect(adjPlat.x, adjPlat.y, adjPlat.width, adjPlat.height);
 
+    // debug funktsionaalsus lisainfo kuvamiseks
     if (debug) {
       ctx.font = "12px Arial";
       ctx.fillStyle = "black";
       ctx.fillText(
-        `[${i}] X:${platform.x} Y:${platform.y} W:${adjustedPlatform.width}`,
-        adjustedPlatform.x,
-        adjustedPlatform.y
+        `[${i}] X:${plat.x} Y:${plat.y} W:${adjPlat.width}`,
+        adjPlat.x,
+        adjPlat.y
       );
     }
+  }
+
+  // joonistab spetsiaalsed elemendid
+  for (let i = 0; i < special.length; i++) {
+    const el = special[i];
+
+    ctx.fillStyle = "green";
+    ctx.fillRect(el.x - offsetX, el.y, 20, 30);
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(el.x - offsetX + 12, el.y + 14, 5, 2);
   }
 
   // joonistab mängija ruuduna
