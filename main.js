@@ -407,6 +407,17 @@ function update() {
       default:
         break;
     }
+
+    // debug funktsionaalsus lisainfo kuvamiseks
+    if (debug) {
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "black";
+      ctx.fillText(
+        `[${i}] X:${el.x} Y:${el.y} T:${el.t}`,
+        el.x - offsetX,
+        el.y
+      );
+    }
   }
 
   // joonistab mängija ruuduna
