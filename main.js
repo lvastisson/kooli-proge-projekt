@@ -75,8 +75,55 @@ const levels = [
     platforms: [
       { x: 0, y: 590, width: 3000, height: 10, color: "black" },
       { x: 50, y: 520, width: 300, height: 10, color: "green" },
+      { x: 400, y: 440, width: 60, height: 10, color: "purple" },
+      { x: 650, y: 440, width: 60, height: 10, color: "purple" },
+      { x: 700, y: 370, width: 60, height: 10, color: "purple" },
+      { x: 600, y: 300, width: 60, height: 10, color: "purple" },
+      { x: 800, y: 240, width: 60, height: 10, color: "purple" },
+      { x: 1000, y: 240, width: 60, height: 10, color: "purple" },
+      { x: 1250, y: 240, width: 60, height: 10, color: "purple" },
+      { x: 1600, y: 400, width: 60, height: 10, color: "purple" },
+      { x: 1800, y: 330, width: 60, height: 10, color: "purple" },
+      { x: 2000, y: 400, width: 60, height: 10, color: "purple" },
+      { x: 2270, y: 400, width: 60, height: 10, color: "purple" },
+      { x: 2350, y: 340, width: 60, height: 10, color: "purple" },
+      { x: 2240, y: 280, width: 60, height: 10, color: "purple" },
+      { x: 2400, y: 220, width: 60, height: 10, color: "purple" },
+      { x: 2600, y: 200, width: 60, height: 10, color: "purple" },
+      { x: 2720, y: 330, width: 60, height: 10, color: "blue" },
     ],
     special: [{ x: 2740, y: 300, t: "door" }],
+  },
+  {
+    levelWidth: 4000,
+    offsetX: 1000,
+    player: {
+      x: 2000,
+      y: 200,
+    },
+    platforms: [
+      { x: 0, y: 590, width: 4000, height: 10, color: "black" },
+      { x: 1740, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 1900, y: 350, width: 100, height: 10, color: "gray" },
+      { x: 1740, y: 400, width: 100, height: 10, color: "gray" },
+      { x: 1900, y: 450, width: 100, height: 10, color: "gray" },
+      { x: 1740, y: 520, width: 100, height: 10, color: "gray" },
+      { x: 1500, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 1250, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 1000, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 750, y: 290, width: 100, height: 10, color: "gray" },
+      { x: 500, y: 280, width: 100, height: 10, color: "gray" },
+      { x: 250, y: 270, width: 100, height: 10, color: "gray" },
+      { x: 60, y: 230, width: 100, height: 10, color: "gray" },
+      { x: 1950, y: 250, width: 100, height: 10, color: "purple" },
+      { x: 2200, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 2500, y: 350, width: 100, height: 10, color: "gray" },
+      { x: 2800, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 3100, y: 350, width: 100, height: 10, color: "gray" },
+      { x: 3400, y: 300, width: 100, height: 10, color: "gray" },
+      { x: 3700, y: 350, width: 100, height: 10, color: "gray" },
+    ],
+    special: [{ x: 100, y: 200, t: "door" }],
   },
 ];
 
@@ -543,8 +590,13 @@ function update() {
 }
 
 function startGame() {
-  // laeb eelmise state'i, kui eksisteerib
-  loadState();
+  try {
+    // laeb eelmise state'i, kui eksisteerib
+    loadState();
+  } catch {
+    localStorage.removeItem("state");
+    loadState();
+  }
 
   refreshLevelData();
 
