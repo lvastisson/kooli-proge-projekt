@@ -357,6 +357,9 @@ function refreshLevelData() {
 
 function handleNextLevel() {
   currLevel++;
+  if (currLevel > levels.length - 1) {
+    currLevel = 0;
+  }
   offsetX = currLevelInfo.offsetX;
   player = { ...player, ...levels[currLevel].player };
 
